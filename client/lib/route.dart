@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/employee_screen.dart';
+import 'screens/employee_attendance_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: "/home",
@@ -41,5 +42,8 @@ final GoRouter router = GoRouter(
 
     // employee management
     GoRoute(path: "/employees", builder: (context, state) => EmployeeScreen ()),
+
+    // add more routes here
+    GoRoute(path: "/employee-attendance", builder: (context, state) => EmployeeAttendanceScreen()),
   ],
 );
