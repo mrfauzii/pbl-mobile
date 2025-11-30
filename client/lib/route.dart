@@ -5,6 +5,7 @@ import 'package:client/screens/login_screen.dart';
 import 'package:client/screens/home_screen.dart';
 import 'package:client/screens/placeholder_screen.dart';
 import 'package:client/screens/Admin/home_admin.dart';
+import 'package:client/screens/Admin/all_letters_page.dart';
 //import 'package:client/screens/Admin/home_admin_main_screen.dart';
 import 'package:client/screens/Admin/izin_laporan_menu.dart';
 import 'package:client/screens/Admin/admin_izin_manager.dart';
@@ -61,6 +62,14 @@ final GoRouter router = GoRouter(
       path: '/pengaturan',
       name: 'pengaturan',
       builder: (context, state) => const PlaceholderScreen(title: 'Pengaturan'),
+    ),
+
+    GoRoute(
+      path: '/admin/all-letters',
+      builder: (context, state) {
+        final letters = state.extra as List<dynamic>;
+        return AllLettersPage(letters: letters);
+      },
     ),
 
     // // ADMIN SHELL (keeping existing structure)

@@ -21,7 +21,9 @@ class _AdminIzinDashboardState extends State<AdminIzinDashboard> {
 
   Future<Map<String, dynamic>> fetchDashboardData() async {
     final response = await http.get(
-      Uri.parse('https://bae60a8d3034.ngrok-free.app/api/izin-dashboard'),
+      Uri.parse(
+        'https://collene-eternal-luba.ngrok-free.dev/api/izin-dashboard',
+      ),
       headers: {'Accept': 'application/json'},
     );
 
@@ -134,9 +136,11 @@ class _AdminIzinDashboardState extends State<AdminIzinDashboard> {
                                 ),
                               );
                             final data = snapshot.data ?? {};
-                            final employeesWithLetters = data['total_employees_with_letters'];
+                            final employeesWithLetters =
+                                data['total_employees_with_letters'];
                             final totalEmployees = data['total_employees'];
-                            final lettersApproved = data['total_letters_approved'];
+                            final lettersApproved =
+                                data['total_letters_approved'];
                             final totalLetters = data['total_letters'];
 
                             return Row(
@@ -172,21 +176,29 @@ class _AdminIzinDashboardState extends State<AdminIzinDashboard> {
 
               SliverToBoxAdapter(
                 child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00A8E8),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Text(
-                      'SEMUA KARYAWAN',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final data = await dashboardData;
+                      final allLetters = data['all_letters'] ?? [];
+
+                      context.push('/admin/all-letters', extra: allLetters);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00A8E8),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Text(
+                        'SEMUA KARYAWAN',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
