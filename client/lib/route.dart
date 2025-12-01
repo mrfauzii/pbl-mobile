@@ -1,3 +1,4 @@
+import 'package:client/screens/profile_screen.dart';
 import 'package:client/services/auth_service.dart';
 import 'package:client/widgets/navbar_admin.dart';
 import 'package:go_router/go_router.dart';
@@ -9,21 +10,20 @@ import 'screens/admin_screen.dart';
 import 'widgets/navbar_user.dart';
 
 final GoRouter router = GoRouter(
-  initialLocation: "/login",
+  initialLocation: "/profile",
 
   redirect: (context, state) {
-    return AuthService.instance.redirectUser(state);
+    // return AuthService.instance.redirectUser(state);
   },
 
   routes: [
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) => Scaffold(
-        body: navigationShell,
-        bottomNavigationBar: NavbarAdmin(navigationShell: navigationShell),
-      ),
-      branches: [],
-    ),
-
+    // StatefulShellRoute.indexedStack(
+    //   builder: (context, state, navigationShell) => Scaffold(
+    //     body: navigationShell,
+    //     bottomNavigationBar: NavbarAdmin(navigationShell: navigationShell),
+    //   ),
+    //   branches: [],
+    // ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) => Scaffold(
         body: navigationShell,
@@ -42,7 +42,7 @@ final GoRouter router = GoRouter(
           routes: [
             GoRoute(
               path: "/profile",
-              builder: (context, state) => const HomeScreen(),
+              builder: (context, state) => const ProfileScreen(),
             ),
           ],
         ),
