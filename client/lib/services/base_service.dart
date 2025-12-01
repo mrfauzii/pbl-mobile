@@ -1,12 +1,28 @@
 import 'package:client/utils/constant.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class BaseService<T> {
   @protected
   final Dio dio = Dio(
     BaseOptions(contentType: "application/json", baseUrl: Constant.apiUrl),
   );
+
+  BaseService() {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final storage = FlutterSecureStorage();
+          final token = await storage.read(key: "token");
+          if (token != null) {
+            options.headers["Authorization"] = "Bearer $token";
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   List<T> parseData(
     Object? data,

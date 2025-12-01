@@ -2,6 +2,7 @@ import 'package:client/services/auth_service.dart';
 import 'package:client/widgets/custom_button.dart';
 import 'package:client/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,12 +16,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _emailController.text = '';
-  //   _passwordController.text = '';
-  // }
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = '';
+    _passwordController.text = '';
+  }
 
   @override
   void dispose() {
@@ -29,11 +30,26 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> handleLogin() async {
-    await AuthService.instance.login(
+  Future<void> handleLogin(BuildContext context) async {
+    final login = await AuthService.instance.login(
+      context,
       _emailController.text,
       _passwordController.text,
     );
+    if (!context.mounted) {
+      return;
+    }
+    if (!login["success"]) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Login failed")));
+      return;
+    }
+    if (login["isAdmin"]) {
+      context.go("/home");
+      return;
+    }
+    context.go("/home");
   }
 
   Widget header() {
@@ -138,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // button
               CustomButton(
                 backgroundColor: const Color.fromRGBO(29, 97, 231, 1),
-                onPressed: handleLogin,
+                onPressed: () => handleLogin(context),
                 child: Text("Masuk"),
               ),
             ],
