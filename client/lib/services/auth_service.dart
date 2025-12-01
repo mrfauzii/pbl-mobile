@@ -46,6 +46,10 @@ class AuthService extends BaseService {
     final isAdmin = await storage.read(key: "isAdmin");
     final loggingIn = state.uri.toString() == "/login";
 
+    if (state.uri.toString().contains("password")) {
+      return null;
+    }
+
     if (token == null) {
       return loggingIn ? null : "/login";
     }
