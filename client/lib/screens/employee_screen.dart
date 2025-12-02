@@ -35,7 +35,9 @@ class EmployeeScreen extends StatelessWidget {
                 child: CustomButton(
                   backgroundColor: Colors.blue,
                   child: const Text("Data Baru"),
-                  onPressed: () {},
+                  onPressed: () {
+                    context.push("/admin/register");
+                  },
                 ),
               ),
               const SizedBox(width: 10),
@@ -60,12 +62,7 @@ class EmployeeScreen extends StatelessWidget {
                   name:
                       "${employees[index].employee?.firstName} ${employees[index].employee?.lastName}",
                   position: "Ini itu role",
-                  onTap: () {},
-
-                  // Opsional: ganti icon action jadi icon edit
                   actionIcon: Icons.edit,
-
-                  // Tambahkan ini supaya ikon muncul
                   onInfoTap: () {
                     context.push(
                       "/admin/profile-detail",

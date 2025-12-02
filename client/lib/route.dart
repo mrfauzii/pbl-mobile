@@ -4,6 +4,7 @@ import 'package:client/screens/login_screen.dart';
 import 'package:client/screens/forgot_password_screen.dart';
 import 'package:client/screens/profile_screen.dart';
 import 'package:client/screens/change_password_screen.dart';
+import 'package:client/screens/register_screen.dart';
 import 'package:client/services/auth_service.dart';
 import 'package:client/widgets/navbar_admin.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -41,6 +42,16 @@ final GoRouter router = GoRouter(
               path: "/admin/employee",
               builder: (context, state) => const EmployeeScreen(),
             ),
+            GoRoute(
+              path: "/admin/profile-detail",
+              builder: (context, state) {
+                return ProfileScreen(userId: state.extra as int);
+              },
+            ),
+            GoRoute(
+              path: "/admin/register",
+              builder: (context, state) => const RegisterScreen(),
+            ),
           ],
         ),
         StatefulShellBranch(
@@ -48,12 +59,6 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: "/admin/profile",
               builder: (context, state) => const ProfileScreen(),
-            ),
-            GoRoute(
-              path: "/admin/profile-detail",
-              builder: (context, state) {
-                return ProfileScreen(userId: state.extra as int);
-              },
             ),
           ],
         ),
