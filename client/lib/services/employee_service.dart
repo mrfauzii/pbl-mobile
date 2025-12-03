@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:client/models/employee_model.dart';
 import 'package:client/services/base_service.dart';
 import 'package:client/utils/api_wrapper.dart';
@@ -15,12 +16,9 @@ class EmployeeService extends BaseService<EmployeeModel> {
 
       log("Raw Response: ${response.data}");
 
-      // Parse manual karena struktur nested
       final responseData = response.data as Map<String, dynamic>;
-
       final List<EmployeeModel> employees = [];
 
-      // Data ada di responseData['data']['employees']
       if (responseData['data'] != null &&
           responseData['data']['employees'] != null) {
         final employeesData = responseData['data']['employees'] as List;
@@ -57,16 +55,13 @@ class EmployeeService extends BaseService<EmployeeModel> {
 
       EmployeeModel? employee;
 
-      // Data ada di responseData['data']['employee'] atau langsung di responseData['data']
       if (responseData['data'] != null) {
         final data = responseData['data'];
 
         if (data is Map<String, dynamic>) {
-          // Cek apakah ada key 'employee'
           if (data.containsKey('employee')) {
             employee = EmployeeModel.fromJson(data['employee']);
           } else {
-            // Langsung parse dari data
             employee = EmployeeModel.fromJson(data);
           }
         }
@@ -91,19 +86,38 @@ class EmployeeService extends BaseService<EmployeeModel> {
   }
 
   /// Update employee profile (by employee themselves)
+  /// ✅ DENGAN SUPPORT UPLOAD FOTO
   Future<ApiResponse<EmployeeModel>> updateProfile(
     int id,
-    Map<String, dynamic> data,
-  ) async {
+    Map<String, dynamic> data, {
+    File? profilePhoto, // ✅ TAMBAHKAN PARAMETER INI
+  }) async {
     try {
-      // Tambahkan _method untuk Laravel method spoofing
-      data['_method'] = 'PATCH';
+      // Gunakan FormData jika ada foto
+      final formData = FormData.fromMap({'_method': 'PATCH', ...data});
+
+      // Tambahkan foto jika ada
+      if (profilePhoto != null) {
+        formData.files.add(
+          MapEntry(
+            'profile_photo',
+            await MultipartFile.fromFile(
+              profilePhoto.path,
+              filename: profilePhoto.path.split('/').last,
+            ),
+          ),
+        );
+      }
 
       final response = await dio.post(
-        // GANTI PATCH JADI POST
         "/employee/profile/$id",
-        data: data,
-        options: Options(headers: {"accept": "application/json"}),
+        data: formData,
+        options: Options(
+          headers: {
+            "accept": "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+        ),
       );
 
       final responseData = response.data as Map<String, dynamic>;
@@ -155,11 +169,9 @@ class EmployeeService extends BaseService<EmployeeModel> {
     Map<String, dynamic> data,
   ) async {
     try {
-      // Tambahkan _method untuk Laravel method spoofing
       data['_method'] = 'PATCH';
 
       final response = await dio.post(
-        // GANTI PATCH JADI POST
         "/employee/management/$id",
         data: data,
         options: Options(headers: {"accept": "application/json"}),
