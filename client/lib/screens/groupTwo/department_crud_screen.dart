@@ -111,7 +111,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
               backgroundColor: const Color(0xFFF6F6F6),
               child: SingleChildScrollView(
                 child: Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF6F6F6),
                     borderRadius: BorderRadius.circular(20),
@@ -126,7 +126,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
                           Text(
                             isEdit ? 'Edit Departemen' : 'Tambah Departemen',
                             style: const TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF1B7FA8),
                             ),
@@ -139,7 +139,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
 
                       // Nama Departemen (tetap text field)
                       CustomTextField(
@@ -148,7 +148,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
                         hintText: "Contoh: Marketing",
                         enabled: !isSaving,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 18),
 
                       // Card untuk preview dan pilih lokasi
                       LocationPreviewCard(
@@ -159,7 +159,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
                         isLoading: isSaving,
                       ),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
 
                       isSaving
                           ? const Center(
