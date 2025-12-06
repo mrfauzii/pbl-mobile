@@ -16,7 +16,7 @@ class FullEmployeeSeeder extends Seeder
             ['Aditya Yuhanda Putra','aditya@email.com',     false,  7, 1], // Direktur IT
             ['Paudra Akbar Buana',  'paud@email.com',       false,  5, 2], // Manager HR
             ['Husein Fadhullah',    'husein@email.com',     false,  4, 1], // Asst Manager IT
-            ['Hamdan Ubaidillah',   'hamdan@email.com',     false,  3, 1], // Supervisor IT
+            ['Hamdan Ubaidillah',   'hamdanubaidillah0306@gmail.com',    true,  3, 1], // Supervisor IT
             ['Ahmad Fauzi',         'ahmad@email.com',      false,  2, 1], // Senior Staff IT
             ['Dewi Sartika',        'dewi@email.com',       false,  1, 3], // Staff Finance
             ['Joko Widodo',         'joko@email.com',       false,  3, 4], // Supervisor Marketing

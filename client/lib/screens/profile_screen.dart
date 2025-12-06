@@ -18,12 +18,15 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppbar(title: ""),
+      appBar: CustomAppbar(
+        title: "Informasi Profil",
+        actions: [Image.asset('assets/logoPbl.png', width: 45, height: 45)],
+      ),
       body: SingleChildScrollView(
         child: FutureBuilder(
           future: UserService.instance.getUser(userId),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
             return profileSection(context, snapshot.data?.data);
@@ -50,7 +53,7 @@ Widget profileSection(BuildContext context, UserModel<EmployeeModel>? user) {
     children: [
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         decoration: const BoxDecoration(color: Color(0xFF22A9D6)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,22 +62,11 @@ Widget profileSection(BuildContext context, UserModel<EmployeeModel>? user) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Informasi Profil",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
                   "Data diri pegawai",
                   style: TextStyle(fontSize: 15, color: Colors.white70),
                 ),
               ],
             ),
-            const Spacer(),
-            Image.asset('assets/logoPbl.png', width: 45, height: 45),
           ],
         ),
       ),

@@ -20,10 +20,7 @@ class AuthService extends BaseService {
     final login = await dio.post<Map<String, dynamic>>(
       "/login",
       data: {"email": email, "password": password, "device_name": "android"},
-      options: Options(
-        headers: Map.from({"accept": "application/json"}),
-        validateStatus: (status) => true,
-      ),
+      options: Options(validateStatus: (status) => true),
     );
     if (login.statusCode != 200) {
       log("Error: Login failed: ${login.data?["message"]}");
