@@ -1,6 +1,8 @@
 import 'package:client/screens/employee_screen.dart';
 import 'package:client/screens/home_screen.dart';
 import 'package:client/screens/login_screen.dart';
+import 'package:client/screens/attendance_screen.dart';
+import 'package:client/screens/schedule_screen.dart';
 import 'package:client/screens/payroll_screen.dart';
 import 'package:client/screens/forgot_password_screen.dart';
 import 'package:client/screens/profile_screen.dart';
@@ -62,6 +64,22 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: "/admin/attendance",
+              builder: (context, state) => const AttendanceScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: "/admin/schedule",
+              builder: (context, state) => const ScheduleScreen(),
+            ),
+          ],
+        ),
       ],
     ),
 
@@ -84,6 +102,14 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: "/profile",
               builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: "/attendance",
+              builder: (context, state) => const AttendanceScreen(),
             ),
           ],
         ),
