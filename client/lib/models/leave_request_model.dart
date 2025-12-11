@@ -1,4 +1,5 @@
 class LeaveRequestPayload {
+  final int employeeId;
   final int letterFormatId;
   final String title;
   final String startDate;
@@ -7,6 +8,7 @@ class LeaveRequestPayload {
   final Map<String, dynamic> employee;
 
   LeaveRequestPayload({
+    required this.employeeId,
     required this.letterFormatId,
     required this.title,
     required this.startDate,
@@ -17,6 +19,7 @@ class LeaveRequestPayload {
 
   Map<String, dynamic> toJson() {
     return {
+      'employee_id': employeeId,
       'letter_format_id': letterFormatId,
       'title': title,
       'effective_start_date': startDate,

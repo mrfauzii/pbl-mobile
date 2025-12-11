@@ -1,26 +1,43 @@
-import 'package:dio/dio.dart';
 import 'package:client/utils/api_wrapper.dart';
-import 'package:client/utils/constant.dart';
 import 'package:client/models/leave_type_model.dart';
 import 'package:client/models/leave_request_model.dart';
+import 'package:client/services/base_service.dart';
 
-class LeaveRequestService {
+class LeaveRequestService extends BaseService { // ✅ Extend BaseService
   LeaveRequestService._();
   static final LeaveRequestService instance = LeaveRequestService._();
 
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: Constant.apiUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      validateStatus: (status) => true,
-    ),
-  );
+  /// GET employee profile (auto-filled from token)
+  Future<ApiResponse<Map<String, dynamic>>> getEmployeeProfile() async {
+    try {
+      final res = await dio.get('/get-profile'); // ✅ Now can access dio
+
+      if (res.statusCode == 200 && res.data['success'] == true) {
+        return ApiResponse<Map<String, dynamic>>(
+          message: "Berhasil memuat profil",
+          success: true,
+          data: res.data['data'],
+        );
+      }
+
+      return ApiResponse<Map<String, dynamic>>(
+        message: res.data['message'] ?? "Gagal memuat profil",
+        success: false,
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse<Map<String, dynamic>>(
+        message: e.toString(),
+        success: false,
+        data: null,
+      );
+    }
+  }
 
   /// GET list jenis izin
   Future<ApiResponse<List<LeaveType>>> getLeaveTypes() async {
     try {
-      final res = await _dio.get('/letter-formats');
+      final res = await dio.get('/letter-formats');
 
       if (res.statusCode == 200 && res.data['success'] == true) {
         List<LeaveType> list = (res.data['data'] as List)
@@ -48,10 +65,10 @@ class LeaveRequestService {
     }
   }
 
-  /// POST pengajuan izin
+  /// POST pengajuan izin (employee_id from token)
   Future<ApiResponse<String>> submitLeave(LeaveRequestPayload payload) async {
     try {
-      final res = await _dio.post('/letters', data: payload.toJson());
+      final res = await dio.post('/letters', data: payload.toJson());
 
       if (res.statusCode == 201 && res.data['success'] == true) {
         return ApiResponse<String>(

@@ -37,6 +37,7 @@ Route::prefix('letters')->group(function () {
     Route::put('/{id}/status', [LetterController::class, 'updateStatus']);
     Route::delete('/{id}', [LetterController::class, 'destroy']);
 });
+Route::get('/get-profile', [LetterController::class, 'getProfile'])->middleware("auth:sanctum",);
 Route::get('/letter-formats', [LetterController::class, 'getAllFormats']);
 // ========================================
 // PROTECTED ROUTES (AUTH REQUIRED)

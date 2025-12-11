@@ -25,11 +25,42 @@ class _LeaveRequestFormScreenState extends State<LeaveRequestFormScreen> {
 
   late Future<ApiResponse<List<LeaveType>>> leaveTypesFuture;
   bool submitting = false;
+  bool _loadingProfile = true;
+
+  int? _employeeId;
 
   @override
   void initState() {
     super.initState();
     leaveTypesFuture = LeaveRequestService.instance.getLeaveTypes();
+    _loadEmployeeProfile();
+  }
+
+  Future<void> _loadEmployeeProfile() async {
+    try {
+      final response = await LeaveRequestService.instance.getEmployeeProfile();
+
+      if (response.success && response.data != null) {
+        final profile = response.data!;
+        final firstName = profile['first_name'] ?? '';
+        final lastName = profile['last_name'] ?? '';
+        final fullName = '$firstName $lastName'.trim();
+
+        setState(() {
+          _employeeId = profile['id'];
+          nameC.text = fullName.isNotEmpty ? fullName : 'Nama tidak tersedia';
+          positionC.text = profile['position']?['name'] ?? '';
+          deptC.text = profile['department']?['name'] ?? '';
+          _loadingProfile = false;
+        });
+      } else {
+        setState(() => _loadingProfile = false);
+        _snack("Gagal memuat profil: ${response.message}", error: true);
+      }
+    } catch (e) {
+      setState(() => _loadingProfile = false);
+      _snack("Error memuat profil: $e", error: true);
+    }
   }
 
   Future<void> pickDate(bool isStart) async {
@@ -60,41 +91,76 @@ class _LeaveRequestFormScreenState extends State<LeaveRequestFormScreen> {
     if (startDate == null || endDate == null) {
       return _snack("Isi tanggal mulai & selesai");
     }
+    if (_employeeId == null) {
+      return _snack("Employee ID tidak ditemukan", error: true);
+    }
 
     setState(() => submitting = true);
 
-    final payload = LeaveRequestPayload(
-      letterFormatId: _selectedType!.id,
-      title: "Pengajuan Izin ${nameC.text}",
-      startDate: startDate!.toIso8601String().split("T")[0],
-      endDate: endDate!.toIso8601String().split("T")[0],
-      notes: reasonC.text,
-      employee: {
-        "name": nameC.text,
-        "position": positionC.text,
-        "department": deptC.text,
-      },
-    );
+    try {
+      final payload = LeaveRequestPayload(
+        employeeId: _employeeId!,
+        letterFormatId: _selectedType!.id,
+        title: "Pengajuan Izin ${nameC.text}",
+        startDate: startDate!.toIso8601String().split("T")[0],
+        endDate: endDate!.toIso8601String().split("T")[0],
+        notes: reasonC.text,
+        employee: {
+          "name": nameC.text,
+          "position": positionC.text,
+          "department": deptC.text,
+        },
+      );
 
-    final res = await LeaveRequestService.instance.submitLeave(payload);
+      final res = await LeaveRequestService.instance.submitLeave(payload);
 
-    setState(() => submitting = false);
+      // ✅ Always setState to stop loading
+      if (mounted) {
+        setState(() => submitting = false);
+      }
 
-    if (res.success) {
-      _snack(res.message);
-      Navigator.pop(context, true);
-    } else {
-      _snack(res.message, error: true);
+      if (res.success) {
+        if (mounted) {
+          _snack(res.message);
+          // ✅ Add slight delay before pop to show snackbar
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            context.go('/home'); // ✅ Navigate back to home with refresh
+          }
+        }
+      } else {
+        if (mounted) {
+          _snack(res.message, error: true);
+        }
+      }
+    } catch (e) {
+      // ✅ Handle error and stop loading
+      if (mounted) {
+        setState(() => submitting = false);
+        _snack("Terjadi kesalahan: $e", error: true);
+      }
     }
   }
 
   void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: error ? Colors.red : Colors.green,
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: error ? Colors.red : Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    nameC.dispose();
+    positionC.dispose();
+    deptC.dispose();
+    reasonC.dispose();
+    super.dispose();
   }
 
   @override
@@ -112,79 +178,117 @@ class _LeaveRequestFormScreenState extends State<LeaveRequestFormScreen> {
         ),
         centerTitle: true,
       ),
-      body: FutureBuilder<ApiResponse<List<LeaveType>>>(
-        future: leaveTypesFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: _loadingProfile
+          ? const Center(child: CircularProgressIndicator())
+          : FutureBuilder<ApiResponse<List<LeaveType>>>(
+              future: leaveTypesFuture,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (!snapshot.data!.success) {
-            return Center(child: Text(snapshot.data!.message));
-          }
+                if (!snapshot.data!.success) {
+                  return Center(child: Text(snapshot.data!.message));
+                }
 
-          final types = snapshot.data!.data!;
+                final types = snapshot.data!.data!;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  _fieldLabel("Nama Karyawan"),
-                  _input(nameC),
+                return Stack(
+                  children: [
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            _fieldLabel("Nama Karyawan"),
+                            _input(nameC, readOnly: true),
 
-                  _fieldLabel("Jabatan"),
-                  _input(positionC),
+                            _fieldLabel("Jabatan"),
+                            _input(positionC, readOnly: true),
 
-                  _fieldLabel("Departemen"),
-                  _input(deptC),
+                            _fieldLabel("Departemen"),
+                            _input(deptC, readOnly: true),
 
-                  _fieldLabel("Jenis Izin"),
-                  _dropdown(types),
+                            _fieldLabel("Jenis Izin"),
+                            _dropdown(types),
 
-                  _fieldLabel("Alasan Izin"),
-                  _input(reasonC, maxLines: 3),
+                            _fieldLabel("Alasan Izin"),
+                            _input(reasonC, maxLines: 3),
 
-                  _fieldLabel("Tanggal Mulai"),
-                  _dateButton(
-                    startDate != null ? df.format(startDate!) : "dd/mm/yy",
-                    () => pickDate(true),
-                  ),
+                            _fieldLabel("Tanggal Mulai"),
+                            _dateButton(
+                              startDate != null
+                                  ? df.format(startDate!)
+                                  : "dd/mm/yy",
+                              () => pickDate(true),
+                            ),
 
-                  _fieldLabel("Tanggal Selesai"),
-                  _dateButton(
-                    endDate != null ? df.format(endDate!) : "dd/mm/yy",
-                    () => pickDate(false),
-                  ),
+                            _fieldLabel("Tanggal Selesai"),
+                            _dateButton(
+                              endDate != null
+                                  ? df.format(endDate!)
+                                  : "dd/mm/yy",
+                              () => pickDate(false),
+                            ),
 
-                  const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: submitting ? null : submit,
+                                child: submitting
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        "Simpan",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      onPressed: submitting ? null : submit,
-                      child: submitting
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              "Simpan",
-                              style: TextStyle(color: Colors.white),
-                            ),
                     ),
-                  ),
-                ],
-              ),
+                    
+                    // ✅ Full screen overlay when submitting
+                    if (submitting)
+                      Container(
+                        color: Colors.black26,
+                        child: const Center(
+                          child: Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 16),
+                                  Text('Mengirim pengajuan izin...'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
@@ -195,27 +299,27 @@ class _LeaveRequestFormScreenState extends State<LeaveRequestFormScreen> {
       padding: const EdgeInsets.only(top: 10, bottom: 6),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 15),
-        ),
+        child: Text(label, style: const TextStyle(fontSize: 15)),
       ),
     );
   }
 
-  Widget _input(TextEditingController c, {int maxLines = 1}) {
+  Widget _input(
+    TextEditingController c, {
+    int maxLines = 1,
+    bool readOnly = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: readOnly ? Colors.grey.shade300 : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: TextFormField(
         controller: c,
         maxLines: maxLines,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-        ),
+        readOnly: readOnly,
+        decoration: const InputDecoration(border: InputBorder.none),
         validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
       ),
     );

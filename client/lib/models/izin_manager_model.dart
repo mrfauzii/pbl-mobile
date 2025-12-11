@@ -17,6 +17,10 @@ class IzinModel {
   final String letterName;
   final String notes;
 
+  // ✅ NEW: Approved fields
+  final String? approvedAt;
+  final String? approvedBy;
+
   IzinModel({
     required this.id,
     required this.statusCode,
@@ -31,6 +35,8 @@ class IzinModel {
     required this.reason,
     required this.letterName,
     required this.notes,
+    this.approvedAt, // ✅ NEW
+    this.approvedBy, // ✅ NEW
   });
 
   factory IzinModel.fromJson(Map<String, dynamic> json) {
@@ -68,6 +74,10 @@ class IzinModel {
       reason: json["reason"]?.toString() ?? "",
       letterName: json["letter_name"]?.toString() ?? "",
       notes: json["notes"]?.toString() ?? "",
+
+      // ✅ NEW: Approved fields
+      approvedAt: json["approved_at"]?.toString(),
+      approvedBy: json["approved_by_name"]?.toString(), // From backend join
     );
   }
 }

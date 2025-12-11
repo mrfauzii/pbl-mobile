@@ -71,6 +71,41 @@ class LetterController extends Controller
         }
     }
 
+    public function getProfile(Request $request)
+    {
+        try {
+            $employee = $request->user()->employee; // Get employee from authenticated user
+
+            if (!$employee) {
+                return ResponseWrapper::make(
+                    "Employee not found",
+                    404,
+                    false,
+                    null,
+                    null
+                );
+            }
+
+            $employee->load(['position', 'department']); // Load relations
+
+            return ResponseWrapper::make(
+                "Profile loaded successfully",
+                200,
+                true,
+                $employee,
+                null
+            );
+        } catch (\Exception $e) {
+            return ResponseWrapper::make(
+                "Failed to load profile",
+                500,
+                false,
+                null,
+                $e->getMessage()
+            );
+        }
+    }
+
 
 
     public function show($id)
@@ -100,13 +135,13 @@ class LetterController extends Controller
     {
         try {
             $validated = $request->validate([
-                'letter_format_id'       => 'required|exists:letter_formats,id',
-                'employee_id'            => 'required|exists:employees,id',
-                'title'                  => 'required|string|max:255',
-                'effective_start_date'   => 'required|date',
-                'effective_end_date'     => 'required|date|after_or_equal:effective_start_date',
-                'notes'                  => 'nullable|string',
-                'employee_data.name'     => 'required|string|max:255',
+                'letter_format_id' => 'required|exists:letter_formats,id',
+                'employee_id' => 'required|exists:employees,id',
+                'title' => 'required|string|max:255',
+                'effective_start_date' => 'required|date',
+                'effective_end_date' => 'required|date|after_or_equal:effective_start_date',
+                'notes' => 'nullable|string',
+                'employee_data.name' => 'required|string|max:255',
                 'employee_data.position' => 'required|string|max:100',
                 'employee_data.department' => 'required|string|max:100',
             ]);

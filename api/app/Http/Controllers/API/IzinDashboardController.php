@@ -6,6 +6,7 @@ use App\Helpers\ResponseWrapper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -161,6 +162,7 @@ class IzinDashboardController extends Controller
                 'letters.effective_start_date',
                 'letters.effective_end_date',
                 'letters.notes',
+                'letters.approved_at',
                 'letter_formats.content as reason',
                 'letter_formats.name as letter_name',
                 DB::raw("CONCAT(employees.first_name, ' ', employees.last_name) AS full_name"),
@@ -169,6 +171,7 @@ class IzinDashboardController extends Controller
             ->join('employees', 'letters.employee_id', '=', 'employees.id')
             ->join('departments', 'employees.department_id', '=', 'departments.id')
             ->join('letter_formats', 'letters.letter_format_id', '=', 'letter_formats.id')
+            ->leftJoin('users as approver', 'letters.approved_by', '=', 'approver.id')
             ->where('letters.id', $id)
             ->first();
 
@@ -201,11 +204,15 @@ class IzinDashboardController extends Controller
                 );
             }
 
+            $approvedBy = Auth::user()->employee->id;
+
             DB::table('letters')
                 ->where('id', $id)
                 ->update([
                     'status' => $status,
-                    'notes'  => $notes // <--- Simpan NOTES
+                    'notes'  => $notes, // <--- Simpan NOTES
+                    'approved_by' => $approvedBy,
+                    'approved_at' => now(),
                 ]);
 
             return ResponseWrapper::make(

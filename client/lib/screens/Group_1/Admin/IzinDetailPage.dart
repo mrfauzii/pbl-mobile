@@ -43,36 +43,124 @@ class _AdminIzinDetailPageState extends State<AdminIzinDetailPage> {
       }
     } catch (e) {
       debugPrint("ERROR DETAIL: $e");
-      setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
   Future<void> updateStatus(int newStatus) async {
+    if (!mounted) return;
+
+    // ✅ Prevent double click
+    bool isProcessing = false;
+
+    if (isProcessing) return;
+    isProcessing = true;
+
+    // ✅ Show loading dialog with WillPopScope to prevent back button
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => WillPopScope(
+        onWillPop: () async => false, // ✅ Prevent back button
+        child: const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Memproses...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
     try {
       final success = await izinService.updateStatus(
         widget.id,
         newStatus,
         notesController.text,
+      ).timeout(
+        const Duration(seconds: 10), // ✅ Add timeout 10 seconds
+        onTimeout: () {
+          throw Exception('Request timeout. Silakan coba lagi.');
+        },
       );
+
+      // ✅ ALWAYS close loading dialog first
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+      }
 
       if (!mounted) return;
 
       if (success) {
+        // ✅ Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Status berhasil diperbarui")),
+          SnackBar(
+            content: Text(
+              newStatus == 1 ? "Izin berhasil disetujui" : "Izin berhasil ditolak",
+            ),
+            backgroundColor: newStatus == 1 ? Colors.green : Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
         );
-        context.pop();
+
+        // ✅ Wait 500ms then go back with refresh
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          // ✅ Go back to list and trigger refresh
+          context.go('/kelola-izin');
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal memperbarui status")),
-        );
+        // ✅ Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Gagal memperbarui status"),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       }
     } catch (e) {
       debugPrint("ERROR UPDATE: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Gagal memperbarui status")));
+
+      // ✅ ALWAYS close loading dialog on error
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+      }
+
+      // ✅ Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().contains('timeout')
+                ? "Request timeout. Silakan coba lagi."
+                : "Error: ${e.toString()}"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      // ✅ Reset processing flag
+      isProcessing = false;
     }
+  }
+
+  @override
+  void dispose() {
+    notesController.dispose();
+    super.dispose();
   }
 
   @override
@@ -89,8 +177,8 @@ class _AdminIzinDetailPageState extends State<AdminIzinDetailPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : izinDetail == null
-          ? const Center(child: Text("Data tidak ditemukan"))
-          : _buildDetailContent(),
+              ? const Center(child: Text("Data tidak ditemukan"))
+              : _buildDetailContent(),
     );
   }
 
@@ -100,8 +188,8 @@ class _AdminIzinDetailPageState extends State<AdminIzinDetailPage> {
     final color = item.statusCode == 0
         ? Colors.orange
         : item.statusCode == 1
-        ? Colors.green
-        : Colors.red;
+            ? Colors.green
+            : Colors.red;
 
     final bool isFinal = item.statusCode != 0;
 
@@ -211,7 +299,6 @@ class _AdminIzinDetailPageState extends State<AdminIzinDetailPage> {
             const SizedBox(height: 25),
           ],
 
-          // ================= NOTES INPUT =================
           // ================= NOTES INPUT (HANYA SAAT PENDING) =================
           if (!isFinal)
             TextField(
